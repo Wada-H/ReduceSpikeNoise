@@ -1,0 +1,62 @@
+ReduceSpikeNoise
+
+Spike noise (solt and pepper noise)を減衰させるplugin
+
+概要
+
+	各pixelにnoise判定を行い、noiseとみなされたものに対してMedian radiusで指定した周囲の輝度を用いたmedian値と入れ替える
+	Noise判定概要
+		Radiusで設定した範囲内においてそれぞれの場合における範囲内の輝度を持つpixelの個数を数える
+		この個数がLimit値を超えた場合はNoiseとみなさない
+
+		0の場合
+			0 < 輝度 < (Max * 0.01)
+			*0を含まないことに注意
+		Max値の場合
+			Max - (Max * 0.01) < 輝度 < Max
+			*最大輝度を含まないことに注意
+		その他の値の場合
+			(注目pixel * 0.85) < 輝度 < (注目pixel値 * 1.15)
+			*注目pixelの値が小さいほど範囲が狭くなることに注意
+
+Radius
+	Noise判定に用いる注目ピクセルを中心とした半径(例 r=1: 3x3 pixels)
+	default 4
+
+Limit
+	Radiusで設定した範囲内に注目pixelと同等の輝度値を持つpixelの数の上限値
+	*注目pixelと同等の値を持つpixel数がこの値未満であればNoiseとする
+	default 1
+
+Fill Type
+	Median処理を行う際の辺縁の処理方法（画像よりはみ出した部分の処理）
+		Repeat
+			辺縁部の値を使用
+		Zero(default)
+			0を使用
+		Refrect
+			辺縁部から対象の値を使用
+	
+Median radius
+	Noise判定されたpixelに対して行うmedian処理に参照される周辺pixel
+		Adjacent-4
+			注目pixelと上下左右の 5 pixels
+		Adjacent-8(default)
+			注目pixelを中心とした 3x3の9 pixels
+		SameRadius
+			注目pixelを中心とした、上記Radiusで設定した半径を用いた (2r+1)^2 pixels
+Preview
+	処理結果のpreviewを表示
+
+
+コツ
+	Radius = 1, Limit = 8 という設定は 3x3 medianに等しくなる。
+	Noiseが多い場合、Noise同士がくっついていることがある。
+	この時、median typeを Adjacent-4 or -8に設定すると取りきれないことがある。
+	この場合、Limitを大きくすることで、Noise認定されやすくする。
+	もしくは、もういちど同じ処理を行うことも有用な手段である。
+	他に１回の処理でなんとかしたい場合は、Radiusをあまり大きくない値にしてMedianTypeをSameRadiusとする。
+	ただし、Radiusが大きい値でSameRadius設定の場合はかなりのボケが生じるため注意が必要である。
+	Noise判定でnoiseとみなされるpixel数が多いほど処理時間がかかる(median処理を行う量が増えるため)
+	*所謂、Filterと呼ばれる処理と違い効率的な計算方法を適用するのが難しいため
+	
